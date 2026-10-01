@@ -1,0 +1,9 @@
+Test,Passed
+1. Eigenvalue match,True
+2. EVR match,True
+3. Eigenvector match (|dot product| ≈ 1),True
+4. Transform match,True
+5. Orthonormality (Q^T Q = I),True
+6. Reconstruction error identity,True
+7. SVD equivalence,True
+8. Decorrelation (cov(Z) = diag(λ)),True
