@@ -1,158 +1,87 @@
 # Running the PCA Mini Project on Kaggle
 
-## Quick Start (5 minutes to get running)
+## Quick Start (3 Steps to Run)
 
-### Step 1: Create a Kaggle Account
-- Go to [kaggle.com](https://www.kaggle.com/) and sign up (free)
-- Verify your phone number (required for internet access in notebooks)
+### Step 1: Create a New Kaggle Notebook
+1. Go to [kaggle.com](https://www.kaggle.com/) and log in (or create a free account).
+2. Click **"+ Create"** → **"New Notebook"** (or visit: https://www.kaggle.com/code).
 
-### Step 2: Create a New Notebook
-1. Click **"+ Create"** → **"New Notebook"**
-2. Or go directly to: https://www.kaggle.com/code
+### Step 2: Upload the Notebook
+1. In the notebook editor, click **File** → **"Import Notebook"**.
+2. Upload `pca_project.ipynb` from your computer.
 
-### Step 3: Upload the Notebook
-1. In the new notebook page, click **File** → **"Import Notebook"**
-2. Select `pca_project.ipynb` from your computer
-3. The notebook will load with all 17 sections
-
-### Step 4: Configure Notebook Settings
-Click the **⚙️ Settings** panel on the right side:
-
-| Setting | Value | Why |
-|---|---|---|
-| **Accelerator** | None (CPU is fine) | PCA is CPU-bound, no GPU needed |
-| **Language** | Python | Default |
-| **Persistence** | Files only | Saves output files |
-| **Internet** | On ✅ | Needed to download MNIST and Olivetti faces |
-| **Environment** | Pin to latest | Uses latest packages |
-
-> ⚠️ **IMPORTANT**: Make sure **Internet is ON** — the notebook downloads MNIST from OpenML and Olivetti faces from sklearn. If you prefer offline, add the MNIST dataset (see Alternative Method below).
-
-### Step 5: Run the Notebook
-- Click **"Run All"** (▶▶ button at the top), OR
-- Run cells one by one with **Shift+Enter**
-
-### Step 6: Download Results
-After execution completes:
-1. Look at the **Output** tab in the right panel
-2. All figures are in `figures/` and tables in `results/`
-3. Click **"Download All"** to get a zip of all output files
+### Step 3: Configure Settings & Run
+In the **⚙️ Settings** panel on the right sidebar:
+- **Internet**: **ON** ✅ *(Required to automatically download MNIST)*.
+- **Accelerator**: None (CPU is plenty fast; no GPU needed).
+- Click **"Run All"** (▶▶ button at the top).
 
 ---
 
-## Alternative: Add MNIST as a Kaggle Dataset (Offline, Faster)
+## The 3 Datasets Used
 
-If internet is unreliable or you want faster loading:
+To keep the project clean, fast, and mathematically transparent, the notebook uses exactly **3 datasets**:
 
-1. In your notebook, click **"+ Add Data"** on the right panel
-2. Search for **"Digit Recognizer"** (the official Kaggle MNIST competition)
-3. Click **"Add"** — this mounts the data at `/kaggle/input/digit-recognizer/train.csv`
-4. The notebook auto-detects this path and loads from there instead of downloading
-
-> The notebook checks for Kaggle dataset paths first, then falls back to OpenML download, then to sklearn's `digits` dataset.
-
----
-
-## Expected Runtime
-
-| Section | Description | Estimated Time |
-|---|---|---|
-| §0 Setup | Imports & PCA class | ~5 seconds |
-| §1 Hand Example | 4-point toy dataset | ~2 seconds |
-| §2 Validation | sklearn comparison tests | ~5 seconds |
-| §3 MNIST Loading | Download or load from disk | 10–60 seconds |
-| §4 Scree & Variance | Fit PCA on all components | ~10 seconds |
-| §5 Accuracy vs k | 3 classifiers × 9 k-values | **3–8 minutes** ⏳ |
-| §6 Timing & Memory | Benchmark comparisons | ~2 minutes |
-| §7 Reconstruction Gallery | Image grid at various k | ~15 seconds |
-| §8 Recon Error vs k | MSE verification plot | ~30 seconds |
-| §9 2D Projection | Scatter plot | ~5 seconds |
-| §10 Eigendigits | Top 16 components as images | ~5 seconds |
-| §11 Eigenfaces | Olivetti faces (downloads ~2MB) | ~30 seconds |
-| §12 Standardization | Breast cancer dataset | ~5 seconds |
-| §13 eigh vs SVD | Timing comparison | ~5 seconds |
-| §14 Denoising (Bonus) | Noise robustness demo | ~10 seconds |
-| §15 Unsupervised (Bonus) | Class separation analysis | ~5 seconds |
-| §16 Confusion Matrix | Best config visualization | ~30 seconds |
-| §17 Summary | Print conclusion | ~1 second |
-
-**Total estimated: ~8–15 minutes** on Kaggle's free CPU tier.
-
-> The slowest section is §5 (Accuracy vs k) because it trains SVM(RBF) on 10k samples at multiple dimensionalities. This is already optimized — full-dimension SVM is skipped.
+| # | Dataset | Dimensions | Role in Project |
+|---|---|---|---|
+| **1** | **Toy 2D Data (4 points)** | $2\text{D} \to 1\text{D}$ | **Pencil-and-paper verification:** Traces the math step-by-step to prove formulas match code. |
+| **2** | **MNIST Handwritten Digits** | $784\text{D} \to 154\text{D}$ | **Primary Machine Learning Benchmark:** Large-scale image compression, eigendigits, denoising, and classifier speedup. |
+| **3** | **Wine Dataset** | $13\text{D}$ (Tabular) | **Standardization Study:** Proves why features with different scales (Proline vs. Alcohol) require scaling before PCA. |
 
 ---
 
-## Output Files
+## Expected Runtime per Section
 
-After running, you'll have:
+| Section | Topic | Dataset | Estimated Time |
+|---|---|---|---|
+| §0 | Imports & From-Scratch PCA Classes | — | ~3 seconds |
+| §1 | Hand-Worked 2D Example | Toy 2D (4 pts) | ~1 second |
+| §2 | Validation Against Scikit-Learn | Digits | ~3 seconds |
+| §3 | MNIST Data Loading | MNIST | ~15–30 seconds |
+| §4 | Scree Plot & Cumulative Variance | MNIST | ~5 seconds |
+| §5 | Accuracy vs. $k$ (LogReg, kNN, SVM) | MNIST (10k subset) | ~2–4 minutes ⏳ |
+| §6 | Timing & Memory Benchmarks | MNIST | ~30 seconds |
+| §7 | Digit Reconstruction Gallery | MNIST | ~5 seconds |
+| §8 | Reconstruction Error Identity | MNIST | ~10 seconds |
+| §9 | 2D Scatter Projection | MNIST | ~3 seconds |
+| §10 | Eigendigits (Top 16 Components) | MNIST | ~3 seconds |
+| §11 | Standardization Effect | Wine (13D) | ~2 seconds |
+| §12 | Eigendecomposition vs. SVD Timing | Digits | ~2 seconds |
+| §13 | PCA Noise Denoising | MNIST | ~5 seconds |
+| §14 | Best Classifier Confusion Matrix | MNIST | ~10 seconds |
+| §15 | Summary & Conclusion | — | ~1 second |
+
+**Total Estimated Runtime:** **~4 to 6 minutes** on Kaggle's free CPU.
+
+---
+
+## Generated Output Files
 
 ### Figures (`figures/`)
-| File | Experiment | Description |
-|---|---|---|
-| `toy_example.png` | §1 | 2D PCA with PC axes as arrows |
-| `scree_plot.png` | E1 | Eigenvalue spectrum (linear + log) |
-| `cumulative_variance.png` | E2 | Cumulative EVR with 90/95/99% markers |
-| `accuracy_vs_k.png` | E3 | Accuracy vs components for 3 classifiers |
-| `timing_comparison.png` | E4 | Fit/predict time bar charts |
-| `reconstruction_gallery.png` | E5 | Digits at k = 5, 20, 50, 150 |
-| `reconstruction_error_vs_k.png` | E6 | Empirical vs theoretical MSE |
-| `2d_projection.png` | E7 | PC1 vs PC2 scatter colored by digit |
-| `eigendigits.png` | E8 | Top 16 eigenvectors as images |
-| `eigenfaces.png` | E9 | Mean face + top eigenfaces |
-| `face_reconstruction.png` | E9 | Face at various k values |
-| `standardization_effect.png` | E10 | Raw vs z-scored PCA comparison |
-| `denoising.png` | E13 | Before/after PCA denoising |
-| `unsupervised_limitation.png` | E14 | Variance vs class separation |
-| `confusion_matrix.png` | E16 | Best classifier confusion matrix |
+- `toy_example.png` (§1): 2D points with PC1/PC2 eigenvector axes and projection lines.
+- `scree_plot.png` (§4): Eigenvalue spectrum showing exponential decay and elbow.
+- `cumulative_variance.png` (§4): Cumulative EVR curve with 90%, 95%, and 99% threshold markers.
+- `accuracy_vs_k.png` (§5): Test accuracy vs. number of components for 3 classifiers.
+- `timing_comparison.png` (§6): Fit time, predict time, and memory savings bar charts.
+- `reconstruction_gallery.png` (§7): Digits reconstructed at $k = 5, 20, 50, 150$.
+- `reconstruction_error_vs_k.png` (§8): Overlay confirming empirical MSE $= \sum_{i > k} \lambda_i$.
+- `2d_projection.png` (§9): 2D cluster scatter plot of digits in latent space.
+- `eigendigits.png` (§10): Top-16 eigenvectors visualized as stroke patterns.
+- `standardization_effect.png` (§11): Comparison of raw vs. standardized EVR on the Wine dataset.
+- `denoising.png` (§13): Clean vs. noisy vs. PCA-denoised digits.
+- `confusion_matrix.png` (§14): Best classifier confusion matrix.
 
 ### Tables (`results/`)
-| File | Content |
-|---|---|
-| `validation_tests.csv` | 8 validation checks (PASS/FAIL) |
-| `variance_thresholds.csv` | k values for 90%, 95%, 99% variance |
-| `accuracy_vs_k.csv` | Full accuracy/F1 results per classifier per k |
-| `timing_memory.csv` | Speedup ratios and compression |
-| `standardization_comparison.csv` | Raw vs standardized EVR |
-| `eigh_vs_svd.csv` | Timing comparison |
+- `validation_tests.csv`: 8 mathematical invariant checks against Scikit-Learn.
+- `variance_thresholds.csv`: Exact $k$ values for 90%, 95%, and 99% variance.
+- `accuracy_vs_k.csv`: Benchmark results per classifier per $k$.
+- `timing_memory.csv`: Speedup and compression metrics.
+- `standardization_comparison.csv`: Wine dataset raw vs. standardized EVR.
+- `eigh_vs_svd.csv`: Eigendecomposition vs. SVD execution timing.
 
 ---
 
-## Troubleshooting
-
-### "ModuleNotFoundError: No module named 'sklearn'"
-This shouldn't happen on Kaggle (sklearn is pre-installed). If it does:
-```python
-!pip install scikit-learn
-```
-
-### MNIST download fails
-- Make sure **Internet is ON** in notebook settings
-- Or add the Digit Recognizer dataset (see Alternative Method above)
-
-### Olivetti faces download fails
-- Not critical — this section is skipped gracefully with a warning
-- The eigenfaces experiment uses a smaller dataset that sklearn downloads
-
-### Notebook times out
-- Kaggle gives **9 hours** of CPU time per session — more than enough
-- If a single cell seems stuck, restart the kernel and run again
-
-### "MemoryError" on MNIST
-- Unlikely on Kaggle (13GB RAM available)
-- If it happens, the notebook falls back to the `digits` dataset (1797×64)
-
----
-
-## Project File Overview
-
-```
-pca_project/
-├── pca_project.ipynb      ← Upload this to Kaggle (self-contained)
-├── pca_scratch.py          ← Standalone PCA module (for local use / report appendix)
-├── test_pca.py             ← Validation tests (already passed locally)
-├── generate_notebook.py    ← Script that generated the notebook (reference)
-├── figures/                ← Created by notebook (empty until you run it)
-└── results/                ← Created by notebook (empty until you run it)
-```
-
-**Only `pca_project.ipynb` needs to be uploaded to Kaggle.** It's fully self-contained — the PCA classes are inlined, no external `.py` files needed.
+## How to Download Your Results from Kaggle
+1. After running the notebook, click on the **Output** tab in the right-hand panel.
+2. Select the `figures/` and `results/` folders (or click **"Download All"**).
+3. All plots are saved at high-resolution **300 DPI**, ready to be embedded directly into slides or reports.

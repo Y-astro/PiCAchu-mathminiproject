@@ -14,7 +14,9 @@ In your class notebook, you solved these problems on paper:
 - You calculated covariance matrices using $S = \frac{1}{N - 1} B B^T$.
 - You decomposed matrices into $A = U \Sigma V^T$ with singular values $\sigma_i = \sqrt{\lambda_i}$.
 
-This guide takes the **exact variables, definitions, and theorems from your Unit 2 notes** and shows how they directly power **Principal Component Analysis (PCA)** in real code. Anyone reading this guide—even with zero machine learning background—will understand how the pieces fit together and how to answer every question in a viva voce exam with complete confidence.
+This guide takes the **exact variables, definitions, and theorems from your Unit 2 notes** and shows how they directly power **Principal Component Analysis (PCA)** in real code across **3 carefully chosen datasets**.
+
+Anyone reading this guide—even with zero machine learning background—will understand how the linear algebra fits together, how the experiments work, and how to defend every line of it in a viva voce exam with complete confidence.
 
 ---
 
@@ -36,13 +38,13 @@ This guide takes the **exact variables, definitions, and theorems from your Unit
    - 2.10 [Step 9: SVD Duality ($A = U \Sigma V^T$)](#210-step-9-svd-duality-a--u-sigma-vt)
    - 2.11 [Step 10: Covariance vs. Correlation (The Wine Dataset)](#211-step-10-covariance-vs-correlation-the-wine-dataset)
 3. [The Complete Hand-Worked 4-Point Numerical Example](#3-the-complete-hand-worked-4-point-numerical-example)
-4. [Datasets Used and Why We Chose Them](#4-datasets-used-and-why-we-chose-them)
-5. [The 14 Empirical Experiments Explained in Plain English](#5-the-14-empirical-experiments-explained-in-plain-english)
+4. [The 3 Datasets and Why We Chose Them](#4-the-3-datasets-and-why-we-chose-them)
+5. [The Core Empirical Experiments Explained in Plain English](#5-the-core-empirical-experiments-explained-in-plain-english)
 6. [Code Architecture: Bridging Notes to NumPy](#6-code-architecture-bridging-notes-to-numpy)
 7. [Comprehensive Presentation & Viva Voce Playbook](#7-comprehensive-presentation--viva-voce-playbook)
    - 7.1 [30-Second Elevator Pitch](#71-30-second-elevator-pitch)
    - 7.2 [2-Minute Complete Walkthrough](#72-2-minute-complete-walkthrough)
-   - 7.3 [Slide-by-Slide Presentation Structure](#73-slide-by-slide-presentation-structure)
+   - 7.3 [Slide-by-Slide Presentation Structure (Telling the 3-Dataset Story)](#73-slide-by-slide-presentation-structure-telling-the-3-dataset-story)
    - 7.4 [Top 15 Viva Questions with Direct Answers](#74-top-15-viva-questions-with-direct-answers)
    - 7.5 [Examiner Traps to Avoid](#75-examiner-traps-to-avoid)
 
@@ -158,7 +160,7 @@ a_{P,1} & a_{P,2} & \cdots & a_{P,N}
 \end{bmatrix} \in \mathbb{R}^{P \times N}
 $$
 
-*(Note on NumPy / Scikit-Learn convention: In Python, data matrices are usually transposed so rows are samples and columns are features, $X \in \mathbb{R}^{N \times P}$. Both formulations are identical mathematically—transposing swaps rows and columns).*
+*(Note on NumPy / Scikit-Learn convention: In Python, data matrices are transposed so rows are samples and columns are features, $X \in \mathbb{R}^{N \times P}$. Both formulations are identical mathematically—transposing swaps rows and columns).*
 
 ---
 
@@ -424,23 +426,20 @@ Comparing this directly to $S = Q D Q^T$:
    \lambda_i = \frac{\sigma_i^2}{N - 1} \quad \iff \quad \sigma_i = \sqrt{(N - 1)\lambda_i}
    $$
 
-#### Why SVD is Used in Practice:
-1. **Avoids Squaring Condition Number**: Computing $B B^T$ directly squares the matrix condition number, which can cause precision loss. SVD works directly on $B$.
-2. **When Features Exceed Samples ($P \gg N$)**: In face recognition (Olivetti Faces), each photo has $P = 4,096$ pixels, but there are only $N = 400$ photos.
-   - The covariance matrix $S$ would be $4,096 \times 4,096$ ($16.7$ million entries!).
-   - Economy SVD only computes a $400 \times 400$ matrix, running hundreds of times faster with a fraction of the memory!
+#### Why SVD is Preferred in Numerical Libraries:
+- Forming $B B^T$ directly squares the matrix condition number ($\kappa(S) = \kappa(B)^2$), which can lead to numerical rounding errors. SVD decomposes $B$ directly without squaring, guaranteeing higher precision.
 
 ---
 
 ### 2.11 Step 10: Covariance vs. Correlation (The Wine Dataset)
 
-Should you always scale features to have unit variance before PCA?
-- **For Images (MNIST, Faces, Digits)**: **DO NOT scale.**
-  - All pixels already share the same physical unit (brightness from $0$ to $255$).
+Should you always scale features to unit variance before PCA?
+- **For Images (MNIST)**: **DO NOT scale.**
+  - All pixels already share the exact same physical unit (brightness from $0$ to $255$).
   - In MNIST, border pixels are black across almost every image ($\sigma \approx 0$). Dividing by near-zero variance blows up sensor noise.
 - **For Tabular / Multi-Unit Data (The Wine Dataset)**: **YOU MUST SCALE.**
 
-#### The Wine Dataset Demonstration (Experiment E10):
+#### The Wine Dataset Demonstration:
 The **Wine dataset** contains 13 chemical features measured across 178 wine samples:
 - **Proline**: Measured in mg/L with values ranging from $278$ to $1,680$ ($\text{Variance} \approx \mathbf{98,610}$).
 - **Alcohol**: Measured in percentage, around $11\%\text{--}14\%$ ($\text{Variance} \approx \mathbf{0.65}$).
@@ -489,34 +488,16 @@ $$
 
 ### 3. Compute Covariance Matrix $S$ ($N - 1 = 3$):
 $$
-B B^T = \begin{bmatrix}
-(-1.5)^2 + (-0.5)^2 + 0.5^2 + 1.5^2 & (-1.5)(-3) + (-0.5)(1) + (0.5)(-1) + (1.5)(3) \\
-(-1.5)(-3) + (-0.5)(1) + (0.5)(-1) + (1.5)(3) & (-3.0)^2 + 1.0^2 + (-1.0)^2 + 3.0^2
-\end{bmatrix} = \begin{bmatrix} 5.0 & 8.0 \\ 8.0 & 20.0 \end{bmatrix}
-$$
-$$
-S = \frac{1}{3} B B^T = \begin{bmatrix} 1.6667 & 2.6667 \\ 2.6667 & 6.6667 \end{bmatrix}
+B B^T = \begin{bmatrix} 5.0 & 8.0 \\ 8.0 & 20.0 \end{bmatrix} \implies S = \frac{1}{3} B B^T = \begin{bmatrix} 1.6667 & 2.6667 \\ 2.6667 & 6.6667 \end{bmatrix}
 $$
 
 ### 4. Find Eigenvalues (Characteristic Equation):
 $$
-\det(S - \lambda I) = (1.6667 - \lambda)(6.6667 - \lambda) - (2.6667)^2 = 0
+\det(S - \lambda I) = \lambda^2 - 8.3333\lambda + 4.000 = 0 \implies \lambda_1 = \mathbf{7.8220}, \quad \lambda_2 = \mathbf{0.5114}
 $$
-$$
-\lambda^2 - 8.3333\lambda + 4.000 = 0
-$$
-Using the quadratic formula:
-$$
-\lambda_1 = \mathbf{7.8220}, \quad \lambda_2 = \mathbf{0.5114}
-$$
-- Total variance $= \operatorname{tr}(S) = 1.6667 + 6.6667 = 8.3333 = 7.8220 + 0.5114$ ✅
+- Total variance $= \operatorname{tr}(S) = 8.3333 = 7.8220 + 0.5114$ ✅
 
 ### 5. Find Eigenvectors:
-Substitute $\lambda_1 = 7.8220$ into $(S - \lambda_1 I)\mathbf{q} = \mathbf{0}$:
-$$
-(1.6667 - 7.8220)q_1 + 2.6667q_2 = 0 \implies -6.1553q_1 + 2.6667q_2 = 0 \implies q_2 \approx 2.3082 q_1
-$$
-Normalizing to unit length gives:
 $$
 \mathbf{q}_1 = \begin{bmatrix} \mathbf{0.3975} \\ \mathbf{0.9176} \end{bmatrix}, \quad \mathbf{q}_2 = \begin{bmatrix} -\mathbf{0.9176} \\ \mathbf{0.3975} \end{bmatrix} \quad (\mathbf{q}_1 \cdot \mathbf{q}_2 = 0)
 $$
@@ -532,41 +513,49 @@ Projecting points onto $\mathbf{q}_1$ yields coordinates $z = [-3.3491, +0.7189,
 - Variance of $z = \mathbf{7.8220} = \lambda_1$! ✅
 - Reconstruction MSE from dropping PC2 $= \mathbf{0.5114} = \lambda_2$! ✅
 
-*(All these numbers match Experiment E11 in our test suite).*
+---
+
+## 4. The 3 Datasets and Why We Chose Them
+
+To keep the project clean, focused, and fast to present, we use exactly **3 datasets**:
+
+```
+                       OUR 3-DATASET STORY
+                       
+   1. Toy 2D Data (4 pts)       2. MNIST Digits (784D)       3. Wine Dataset (13D)
+  ┌──────────────────────┐     ┌──────────────────────┐     ┌──────────────────────┐
+  │  Pencil & Paper Math │     │ Real-World ML & CV   │     │ The Scaling Nuance   │
+  │  • 2D -> 1D          │     │ • 784D -> 154D (95%) │     │ • 13 chemical traits │
+  │  • Manual det(S-λI)=0│     │ • Visual digits      │     │ • Proline: 98,610 var│
+  │  • Exact MSE = λ₂    │     │ • kNN speedup        │     │ • Cov vs Correlation │
+  └──────────────────────┘     └──────────────────────┘     └──────────────────────┘
+```
+
+| # | Dataset | Dimensions | Purpose in Presentation | What You Tell the Evaluator |
+|---|---|---|---|---|
+| **1** | **Toy 2D Data (4 points)** | $2\text{D} \to 1\text{D}$ | **The Mathematical Proof** | *"We do this by hand on paper/whiteboard in 60 seconds to prove our formulas ($\det(S - \lambda I)=0$, $Q^T S Q = D$) match code exactly."* |
+| **2** | **MNIST Handwritten Digits** | $784\text{D} \to 154\text{D}$ | **The Star Engineering Benchmark** | *"This proves PCA on real high-dimensional images: $5.2\times$ compression, visual reconstruction, and $k\text{NN}$ speedup while keeping $>97\%$ accuracy."* |
+| **3** | **Wine Dataset** | $13\text{D}$ (Tabular) | **The Practical Rule (Feature Scaling)** | *"This answers the classic viva question: 'When must you standardize?' Without scaling, Proline's huge scale dominates 99.8% of PC1. Scaling fixes it."* |
 
 ---
 
-## 4. Datasets Used and Why We Chose Them
+## 5. The Core Empirical Experiments Explained in Plain English
 
-| Dataset | Attributes ($P$) | Samples ($N$) | Purpose & Justification |
-|---|---|---|---|
-| **Toy 2D Data** | 2 | 4 | **Pencil-and-paper verification:** Allows anyone to calculate every intermediate number by hand to prove the code matches theory. |
-| **Scikit-Learn Digits** | 64 ($8 \times 8$) | 1,797 | **Fast offline testing:** Small enough that our 25 automated pytest tests finish in $< 3.5$ seconds with zero internet connection required. |
-| **MNIST 784** | 784 ($28 \times 28$) | 70,000 | **Primary Machine Learning benchmark:** Real-world image data showing that 784 dimensions compress to ~154 dimensions ($5.2\times$ compression) while keeping $>97\%$ accuracy. |
-| **Olivetti Faces** | 4,096 ($64 \times 64$) | 400 | **High-dimensional SVD demo ($P \gg N$):** Classic computer vision benchmark (Turk & Pentland, 1991). Features (4,096 pixels) vastly outnumber samples (400 photos). Produces interpretable "eigenfaces". |
-| **Wine Dataset** | 13 | 178 | **Standardization study:** 13 chemical features with wildly different units. Proline variance ($\approx 98,610$) dwarfs alcohol ($\approx 0.65$), proving why scaling is required for tabular data. |
-| **Iris Dataset** | 4 | 150 | **Limitation demonstration:** Shows that PCA is unsupervised. The direction with the largest variance does not always separate classes best. |
+Here is a summary of the experiments in the streamlined notebook:
 
----
-
-## 5. The 14 Empirical Experiments Explained in Plain English
-
-Here is a summary of the 14 experiments in the Jupyter notebook:
-
-- **E1: Scree Plot (`figures/scree_plot.png`)**: Plots eigenvalues $\lambda_1, \dots, \lambda_{784}$ to show the sharp "elbow" where extra dimensions add little new variance.
-- **E2: Cumulative Explained Variance (`figures/cumulative_variance.png`)**: Identifies how many components are needed to retain 90% ($k \approx 87$), 95% ($k \approx 154$), and 99% ($k \approx 331$) of MNIST information.
-- **E3: Classifier Accuracy vs. $k$ (`figures/accuracy_vs_k.png`)**: Benchmarks Logistic Regression, $k\text{NN}$, and SVM across $k$. Accuracy reaches full-dimensional performance by $k \approx 50\text{--}100$.
-- **E4: Computational Speed & Memory Benchmark (`figures/timing_comparison.png`)**: Measures the $5.2\times$ memory reduction and $k\text{NN}$ distance calculation speedup.
-- **E5: Reconstruction Gallery (`figures/reconstruction_gallery.png`)**: Shows digits reconstructed at $k = 5, 20, 50, 150$, showing blurry smudges sharpen into crisp digits.
-- **E6: Reconstruction Error Identity (`figures/reconstruction_error_vs_k.png`)**: Proves that empirical MSE matches the sum of discarded eigenvalues $\sum_{i > k} \lambda_i$ to machine precision.
-- **E7: 2D Latent Projection (`figures/2d_projection.png`)**: Projects 784D digits down to 2D (PC1 vs. PC2), showing how different digit clusters naturally separate without labels.
-- **E8: Eigendigits (`figures/eigendigits.png`)**: Reshapes top-16 eigenvectors into $28 \times 28$ images to reveal handwriting stroke primitives (loops, diagonals, vertical stems).
-- **E9: Eigenfaces (`figures/eigenfaces.png`, `figures/face_reconstruction.png`)**: Computes PCA on Olivetti faces using SVD, visualizing the mean face and facial feature components.
-- **E10: Standardization Study on Wine (`figures/standardization_effect.png`)**: Demonstrates that Proline dominates 99.81% of unscaled PC1, whereas standardization balances all 13 features.
-- **E11: Validation Suite (`results/validation_tests.csv`)**: Evaluates 8 mathematical invariant checks against Scikit-Learn (all pass 100%).
-- **E12: Eigendecomposition vs. SVD Benchmark (`results/eigh_vs_svd.csv`)**: Verifies that covariance `eigh` and economy `svd` produce identical eigenvalues.
-- **E13: PCA Denoising (`figures/denoising.png`)**: Demonstrates that discarding small trailing eigenvalues automatically filters out random Gaussian static noise.
-- **E14: Unsupervised Nature Limitation (`figures/unsupervised_limitation.png`)**: Demonstrates that maximum variance does not always equal class separation, motivating supervised alternatives like LDA.
+1. **§1: Hand-Worked 2D Example (`figures/toy_example.png`)**: Visualizes the 4 points, the mean $\bar{\mathbf{x}}$, the PC1/PC2 eigenvector arrows, and orthogonal projections.
+2. **§2: Scikit-Learn Validation (`results/validation_tests.csv`)**: Evaluates 8 mathematical invariant checks against Scikit-Learn (all pass 100%).
+3. **§4: Scree Plot & Cumulative Variance (`figures/scree_plot.png`, `figures/cumulative_variance.png`)**: Shows the sharp eigenvalue elbow and verifies that 95% variance on MNIST requires only $k \approx 154$ dimensions.
+4. **§5: Classifier Accuracy vs. $k$ (`figures/accuracy_vs_k.png`)**: Benchmarks Logistic Regression, $k\text{NN}$, and SVM across $k$. Shows accuracy saturates around $k \approx 50\text{--}100$.
+5. **§6: Computational Speed & Memory Benchmark (`figures/timing_comparison.png`)**: Measures the $5.2\times$ memory reduction and $k\text{NN}$ distance calculation speedup.
+6. **§7: Digit Reconstruction Gallery (`figures/reconstruction_gallery.png`)**: Shows digits reconstructed at $k = 5, 20, 50, 150$, showing blurry smudges sharpen into crisp digits.
+7. **§8: Reconstruction Error Identity (`figures/reconstruction_error_vs_k.png`)**: Proves that empirical MSE matches the sum of discarded eigenvalues $\sum_{i > k} \lambda_i$ to machine precision.
+8. **§9: 2D Latent Projection (`figures/2d_projection.png`)**: Projects 784D digits down to 2D (PC1 vs. PC2), showing how different digit clusters naturally separate without labels.
+9. **§10: Eigendigits (`figures/eigendigits.png`)**: Reshapes top-16 eigenvectors into $28 \times 28$ images to reveal handwriting stroke primitives (loops, diagonals, vertical stems).
+10. **§11: Standardization Study on Wine (`figures/standardization_effect.png`)**: Demonstrates that Proline dominates 99.81% of unscaled PC1, whereas standardization balances all 13 features.
+11. **§12: Eigendecomposition vs. SVD Timing (`results/eigh_vs_svd.csv`)**: Verifies that covariance `eigh` and economy `svd` produce identical eigenvalues.
+12. **§13: PCA Denoising (`figures/denoising.png`)**: Demonstrates that discarding small trailing eigenvalues automatically filters out random Gaussian static noise.
+13. **§14: Best Classifier Confusion Matrix (`figures/confusion_matrix.png`)**: Displays per-digit recognition accuracy for the best configuration.
 
 ---
 
@@ -598,30 +587,28 @@ Contains **25 unit tests** run with pytest:
 1. **The Core Problem**: High-dimensional datasets (like handwritten digit images) contain heavy multicollinearity, waste memory, and slow down distance-dependent algorithms like $k$-Nearest Neighbors.
 2. **The Mathematical Solution**: Rather than using black-box libraries, we explored how PCA finds a new orthogonal coordinate system where features are completely decorrelated. We showed that subtracting the mean, computing the covariance matrix $S = \frac{1}{N-1} B B^T$, and solving $S\mathbf{q} = \lambda\mathbf{q}$ yields eigenvectors that point along maximal variance axes.
 3. **The Implementation**: We built both covariance-based and SVD-based PCA engines in pure NumPy. We proved our code's accuracy with 25 automated pytest tests matching Scikit-Learn to $10^{-8}$ precision.
-4. **Key Experimental Results**:
-   - **Compression**: MNIST can be reduced from 784 to 154 dimensions ($5.2\times$ compression) with negligible loss of accuracy.
-   - **Theoretical Validation**: The empirical reconstruction error matches the sum of discarded eigenvalues ($\sum_{i > k} \lambda_i$) exactly.
-   - **Feature Scaling**: On the Wine dataset, we demonstrated that unstandardized data allows high-variance features like Proline to monopolize 99.8% of PC1, proving why $z$-scoring is mandatory for multi-unit data.
-   - **Denoising**: We showed how PCA acts as a natural noise filter by discarding small trailing eigenvalues.
+4. **The 3-Dataset Story**:
+   - **Toy 2D Data**: Proved our manual pencil-and-paper math matches code to 8 decimals.
+   - **MNIST Images (784D)**: Showed 784 features can be compressed to 154 dimensions ($5.2\times$ reduction) with $>97\%$ accuracy and faster $k\text{NN}$ inference.
+   - **Wine Dataset (13D)**: Proved why feature scaling is critical—without standardization, Proline alone takes 99.8% of PC1, blinding PCA to all other attributes.
 
 ---
 
-### 7.3 Slide-by-Slide Presentation Structure
+### 7.3 Slide-by-Slide Presentation Structure (Telling the 3-Dataset Story)
 
 | Slide # | Slide Title | What to Show | Spoken Talking Point |
 |---|---|---|---|
 | **1** | Title & Overview | Title, team members, course | *"Our project implements PCA from linear algebra first principles, evaluating its effect on machine learning classifiers."* |
-| **2** | Motivation | $28 \times 28$ image $\to$ 784D vector | *"A digit is a single point in 784D space. But neighboring pixels are correlated. We want an optimal orthogonal basis that removes redundancy."* |
+| **2** | Motivation: Curse of Dimensionality | $28 \times 28$ image $\to$ 784D vector | *"A digit is a point in 784D space. But neighboring pixels are redundant. We want an optimal orthogonal basis that removes redundancy."* |
 | **3** | The Math Pipeline | Mean $\to$ Covariance $\to$ Eigenpairs | *"We center the data into deviation matrix $B$, compute covariance $S = \frac{1}{N-1} B B^T$, and solve $S\mathbf{q} = \lambda\mathbf{q}$. The Spectral Theorem guarantees orthogonal axes."* |
-| **4** | Hand-Worked 2D Example | Figure: `toy_example.png` | *"Here are 4 points calculated by hand. PC1 captures 93.86% of the variance, and the reconstruction error exactly matches eigenvalue $\lambda_2$."* |
-| **5** | Code & 25 Unit Tests | Table of passed tests | *"We built PCAScratch in NumPy. All 25 unit tests pass, matching Scikit-Learn to machine precision."* |
-| **6** | Scree Plot & Choosing $k$ | Figures: `scree_plot.png`, `cumulative_variance.png` | *"Eigenvalues decay exponentially. On MNIST, 95% variance is reached at $k \approx 154$—a $5.2\times$ reduction."* |
-| **7** | Accuracy vs. $k$ | Figure: `accuracy_vs_k.png` | *"Classifiers reach full-dimension accuracy at $k \approx 50\text{--}100$. Below $k=10$, accuracy drops sharply because essential geometry is lost."* |
-| **8** | Speedup & Memory | Figure: `timing_comparison.png` | *"kNN inference is significantly faster because distance checks require $5.2\times$ fewer operations, with $5.2\times$ less RAM."* |
-| **9** | Reconstructions & Denoising | Figures: `reconstruction_gallery.png`, `denoising.png` | *"Visual proof: $k=150$ reconstructs crisp digits. Dropping small eigenvalues automatically filters out random static noise."* |
-| **10** | Eigenfaces (Olivetti) | Figures: `eigenfaces.png`, `face_reconstruction.png` | *"In faces, $P=4096 \gg N=400$. We use SVD to compute facial components like lighting, eyes, and jawlines."* |
-| **11** | Standardization (Wine) | Figure: `standardization_effect.png` | *"In the Wine dataset, Proline variance is 98,610 while Alcohol is 0.65. Without scaling, Proline takes 99.8% of PC1. Standardizing fixes this."* |
-| **12** | Conclusion & Limitations | Bulleted summary | *"PCA is powerful, linear, and unsupervised. We verified its theory, proved its speedups, and highlighted its boundaries."* |
+| **4** | Dataset 1: Hand-Worked 2D Example | Figure: `toy_example.png` | *"Here are 4 points calculated by hand. PC1 captures 93.86% of the variance, and the reconstruction error exactly matches eigenvalue $\lambda_2$."* |
+| **5** | Code & 25 Unit Tests | Table of passed tests | *"We built PCAScratch in pure NumPy. All 25 unit tests pass, matching Scikit-Learn to machine precision."* |
+| **6** | Dataset 2: Scree Plot & Choosing $k$ | Figures: `scree_plot.png`, `cumulative_variance.png` | *"Eigenvalues decay exponentially. On MNIST, 95% variance is reached at $k \approx 154$—a $5.2\times$ reduction."* |
+| **7** | Dataset 2: Accuracy vs. $k$ | Figure: `accuracy_vs_k.png` | *"Classifiers reach full-dimension accuracy at $k \approx 50\text{--}100$. Below $k=10$, accuracy drops sharply because essential geometry is lost."* |
+| **8** | Dataset 2: Speedup & Memory | Figure: `timing_comparison.png` | *"kNN inference is significantly faster because distance checks require $5.2\times$ fewer operations, with $5.2\times$ less RAM."* |
+| **9** | Dataset 2: Visual Reconstructions & Denoising | Figures: `reconstruction_gallery.png`, `denoising.png` | *"Visual proof: $k=150$ reconstructs crisp digits. Dropping small eigenvalues automatically filters out random static noise."* |
+| **10** | Dataset 3: Standardization (Wine) | Figure: `standardization_effect.png` | *"In the Wine dataset, Proline variance is 98,610 while Alcohol is 0.65. Without scaling, Proline takes 99.8% of PC1. Standardizing fixes this."* |
+| **11** | Conclusion & Summary | Quantified metrics table | *"PCA is powerful, linear, and unsupervised. We verified its theory, proved its speedups, and verified its exact error identity."* |
 
 ---
 
